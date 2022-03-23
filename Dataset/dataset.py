@@ -28,7 +28,6 @@ class Dataset:
         fileName = f"{baseDir}/{name}"
 
         if not os.path.exists(fileName):
-            print(f"{fileName} does NOT EXIST")
             log.info(f"Downloading dataset {name}...")
             urlretrieve(f"{url}/{name}", filename=fileName)
         else:
