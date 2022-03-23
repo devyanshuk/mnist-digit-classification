@@ -1,5 +1,4 @@
 #global
-from fileinput import filename
 import os
 import gzip
 import numpy as np
