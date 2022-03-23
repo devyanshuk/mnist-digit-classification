@@ -1,10 +1,15 @@
-import pickle
-import sklearn_json
-import lzma
-import json
-import jsonpickle
+# import pickle
+# import sklearn_json
+# import lzma
+# import json
+# import jsonpickle
+from Dataset.labels import *
+from Dataset.dataset import Dataset
 
-from dataset import Dataset
+from Dataset.dataset import Dataset
+import numpy as np
+import sys
+np.set_printoptions(threshold=sys.maxsize)
 
 if __name__ == "__main__":
     # with lzma.open("train.model", "rb") as model_file:
@@ -14,4 +19,5 @@ if __name__ == "__main__":
     #     in_file = open("train.json", "r")
     #     new_model = jsonpickle.decode(in_file.read())
     #     print(new_model)
-    dataset = Dataset()
+    train = Dataset(name=TRAIN_DATA, isTarget=False)
+    print(train.data.shape)
