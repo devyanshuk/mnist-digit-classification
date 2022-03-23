@@ -1,2 +1,3 @@
 numpy
 jsonpickle
+scikit-learn
