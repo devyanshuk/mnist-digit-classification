@@ -2,9 +2,10 @@
 import numpy as np
 
 #local
-from Activations.relu import ReLU
-from Activations.sigmoid import Sigmoid
-from Activations.softmax import Softmax
+from .Activations.relu import ReLU
+from .Activations.sigmoid import Sigmoid
+from .Activations.softmax import Softmax
+from Logger.logger import log
 
 class NeuralNetwork:
 
@@ -53,14 +54,21 @@ class NeuralNetwork:
         if (any(param <= 0 for param in self.hidden_layer_sizes)):
             raise ValueError("Hidden layer must be an integer greater than 0")
         all_layer_sizes = [X.shape[1]] + self.hidden_layer_sizes + [self.classes]
+        log.info(f"all layer sizes = {all_layer_sizes}")
+        log.info(f"Training the model. Number of features = {X.shape[1]}")
         self.weights = np.array([
-            self.generator.uniform(size=[all_layer_sizes[i], all_layer_sizes[i+1]], low=-0.1, high=0.1)
-            for i in range(len(all_layer_sizes) - 2)
-        ])
+            self.generator.uniform(size=(all_layer_sizes[i], all_layer_sizes[i+1]), low=-0.1, high=0.1)
+            for i in range(len(all_layer_sizes) - 1)
+        ], dtype=object)
         self.biases = np.array([
-            np.zeros(all_layer_sizes[i])
-            for i in range(1, len(all_layer_sizes) - 1)
-        ])
+            np.zeros((all_layer_sizes[i]))
+            for i in range(1, len(all_layer_sizes))
+        ], dtype=object)
+        log.info(f"Weights shape = {self.weights.shape} and biases shape = {self.biases.shape}")
+        for w in self.weights:
+            log.info(f"weight shape = {w.shape}")
+        for b in self.biases:
+            log.info(f"bias shape = {b.shape}")
         self.minibatchSGD(X, y)
 
     
@@ -77,7 +85,7 @@ class NeuralNetwork:
             prev_input = prev_input.T @ weight + bias
             layer_results.append(prev_input)
         return layer_results if not applyActivations else \
-               [self.hidden_layer_activation(i) for i in layer_results[:-1]] + [Softmax.fn(layer_results[-1])]
+               [self.hidden_layer_activation(i) for i in layer_results[:-1]] + [Softmax.fn(layer_results[-1] - max(layer_results[-1]))]
 
 
     def minibatchSGD(self, train_data, train_target):
@@ -86,8 +94,8 @@ class NeuralNetwork:
         for epoch in range(self.epochs):
             permutation = self.generator.permutation(train_data.shape[0])
             for i in range(0, train_data.shape[0], self.batch_size):
-                weight_loss_derivative = np.array(np.zeros(weight.shape) for weight in self.weights)
-                biases_loss_derivative = np.array([np.zeros(bias.shape) for bias in self.biases])
+                weight_loss_derivative = np.array([np.zeros(weight.shape) for weight in self.weights], dtype=object)
+                biases_loss_derivative = np.array([np.zeros(bias.shape) for bias in self.biases], dtype=object)
                 for j in range(i, i + self.batch_size):
                     train_j = train_data[permutation[j]]
                     train_target_j = train_target[permutation[j]]
@@ -102,21 +110,25 @@ class NeuralNetwork:
 
                 self.updateWeightsAndBiases(weight_loss_derivative, biases_loss_derivative)
 
+            train_accuracy = self.getAccuracy(train_data, train_target)
+            print(f"epoch number {epoch} finished. Training accuracy = {(100 * train_accuracy):.2f}%")
+
 
     def backdrop(self, train, target, weight_loss_derivative, biases_loss_derivative):
         """
         """
         layer_res = self.forward(train)
-        layer_res_activation = np.array([self.hidden_layer_activation.fn(i) for i in layer_res[:-1]] + Softmax.fn(layer_res[-1]))
+        layer_res_activation = np.array([self.hidden_layer_activation.fn(i) for i in layer_res[:-1]] \
+                             + [Softmax.fn(layer_res[-1] - np.max(layer_res[-1]))], dtype=object)
 
-        delta = layer_res_activation[-1] - target
+        delta = layer_res_activation[-1] - self.getVectorizedResult(target)
         biases_loss_derivative[-1] = delta
-        weight_loss_derivative[-1] = np.dot(delta, layer_res_activation[-2].T)
+        weight_loss_derivative[-1] = np.dot(delta, layer_res_activation[-1].T)
         rest_layer_res_activation = np.array(layer_res[:-1])
         rest_layer_res_activation_derivative = self.hidden_layer_activation.derivative(rest_layer_res_activation)
 
-        for i in range(2, self.hidden_layer_sizes + 2):
-            delta = np.dot(self.weights[-i+1].T, delta) * rest_layer_res_activation_derivative[-i+1]
+        for i in range(2, self.hidden_layers_len + 2):
+            delta = np.dot(self.weights[-i+1], delta) * rest_layer_res_activation_derivative[-i+1]
             biases_loss_derivative[-i] = delta
             weight_loss_derivative[-i] = np.dot(delta, rest_layer_res_activation[-i+1].T)
 
@@ -136,6 +148,15 @@ class NeuralNetwork:
         Given a target class, return a self.classes dimentional unit vector
         with 1 in the jth index (One-Hot Encoding of j)
         """
-        res = np.zeros((self.classes, 1))
+        res = np.zeros((self.classes))
         res[j] = 1
         return res
+
+    def getAccuracy(self, X, y):
+        """
+        """
+        prediction = np.argmax(np.array([np.array(self.forward(x)[-1]) for x in X]), axis=1)
+        print("PREDICTION", prediction)
+        accuracy = sum(1 if a == b else 0 for a,b in np.stack((prediction, y), axis=1))
+        return accuracy / len(prediction)
+
