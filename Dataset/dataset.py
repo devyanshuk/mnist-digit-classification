@@ -1,5 +1,6 @@
 #global
 import os
+import ssl
 import gzip
 import numpy as np
 from urllib.request import urlretrieve
@@ -28,6 +29,8 @@ class Dataset:
 
         if not os.path.exists(fileName):
             log.info(f"Downloading dataset {name}...")
+            if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)):
+                ssl._create_default_https_context = ssl._create_unverified_context
             urlretrieve(f"{url}/{name}", filename=fileName)
         else:
             log.info(f"{fileName} exists")
