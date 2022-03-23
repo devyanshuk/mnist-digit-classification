@@ -39,3 +39,4 @@ class Dataset:
             self.data = np.frombuffer(f.read(), np.uint8, offset=16 if not isTarget else 8)
         if not isTarget:
             self.data = self.data.reshape(shape)
+            self.data = self.data / np.float32(256)
