@@ -111,7 +111,7 @@ class NeuralNetwork:
 
         delta = layer_res_activation[-1] - target
         biases_loss_derivative[-1] = delta
-        weight_loss_derivative[-1] = np.dot(delta, layer_res_activation[-2].transpose())
+        weight_loss_derivative[-1] = np.dot(delta, layer_res_activation[-2].T)
         rest_layer_res_activation = np.array(layer_res[:-1])
         rest_layer_res_activation_derivative = self.hidden_layer_activation.derivative(rest_layer_res_activation)
 

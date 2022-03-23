@@ -2,7 +2,7 @@
 import numpy as np
 
 #local
-from .Activation import Activation
+from .activation import Activation
 
 class Softmax(Activation):
 
