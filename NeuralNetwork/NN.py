@@ -15,7 +15,7 @@ class NeuralNetwork:
         hidden_layer_activation=ReLU,
         seed=42,
         learning_rate=0.01,
-        epochs=20,
+        epochs=10,
         batch_size=10):
         """
         Initialize a neural network with len(hidden_layer_sizes) hidden layers of sizes hidden_layer_sizes
@@ -70,6 +70,31 @@ class NeuralNetwork:
         self.initWeightsAndBiases(X)
         self.minibatchSGD(X, y)
 
+    def validate_trained(self):
+        if self.weights == [] or self.biases == []:
+            raise ValueError("Train the model using fit() method before having the network predict it.")
+
+    def predict(self, X):
+        """
+        Use the learned weights and biases to predict outputs for the test dataset X
+        """
+        self.validate_trained()
+        return np.argmax(np.array([np.array(self.forwardpropagation(x)[-1]) for x in X]), axis=1)
+
+    def predict_single(self, x):
+        """
+        use the learned weights and biases to predict an output for a single input x
+        """
+        self.validate_trained()
+        return np.argmax(self.forwardpropagation(x)[-1])
+
+    def get_output_layer_single(self, x):
+        """
+        return the results of the output layer (probability distribution of the classes),
+        given an input to neurons in the first layer.
+        """
+        self.validate_trained()
+        return self.forwardpropagation(x)[-1]
 
     def initWeightsAndBiases(self, X):
         """
@@ -145,7 +170,7 @@ class NeuralNetwork:
                 )
 
             train_accuracy = self.getAccuracy(train_data, train_target)
-            print(f"epoch number {epoch} finished. Training accuracy = {(100 * train_accuracy):.2f}%")
+            log.info(f"epoch number {epoch} finished. Training accuracy = {(100 * train_accuracy):.2f}%")
 
 
     def backpropagation(self, output_layer, target_batch, hidden_layers):
@@ -190,7 +215,7 @@ class NeuralNetwork:
         Return the accuracy of the learned weights and biases, given an input X \in |R^(N * K) and target
         y \in |R^(N), where K is the number of features of the input data. 
         """
-        prediction = np.argmax(np.array([np.array(self.forwardpropagation(x)[-1]) for x in X]), axis=1)
+        prediction = self.predict(X)
         accuracy = sum(1 if a == b else 0 for a,b in np.stack((prediction, y), axis=1))
         return accuracy / len(prediction)
 
