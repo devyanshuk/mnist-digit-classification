@@ -11,4 +11,6 @@ class Softmax(Activation):
         """
         softmax(x) = e^x / sum (j over x (e^j))
         """
-        return np.exp(x) / np.sum(np.exp(x))
+        res = np.exp(x - np.max(x, axis=-1, keepdims=True))
+        res /= np.sum(res, axis=-1, keepdims=True)
+        return res

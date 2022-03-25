@@ -15,7 +15,7 @@ class NeuralNetwork:
         hidden_layer_activation=ReLU,
         seed=42,
         learning_rate=0.01,
-        epochs=10,
+        epochs=20,
         batch_size=10):
         """
         Initialize a neural network with len(hidden_layer_sizes) hidden layers of sizes hidden_layer_sizes
@@ -53,6 +53,11 @@ class NeuralNetwork:
         """
         if (any(param <= 0 for param in self.hidden_layer_sizes)):
             raise ValueError("Hidden layer must be an integer greater than 0")
+        self.initWeightsAndBiases(X)
+        self.minibatchSGD(X, y)
+
+
+    def initWeightsAndBiases(self, X):
         all_layer_sizes = [X.shape[1]] + self.hidden_layer_sizes + [self.classes]
         log.info(f"all layer sizes = {all_layer_sizes}")
         log.info(f"Training the model. Number of features = {X.shape[1]}")
@@ -69,23 +74,29 @@ class NeuralNetwork:
             log.info(f"weight shape = {w.shape}")
         for b in self.biases:
             log.info(f"bias shape = {b.shape}")
-        self.minibatchSGD(X, y)
-
     
-    def forward(self, input, applyActivations=False):
+    def forwardpropagation(self, inputs):
         """
         Forward Propagation; given the input to the first layer,
-        return all layer results (activations applied based on the argument given
-        to the applyActivations parameter).
+        return all layer results (activations applied).
         """
-        layer_results = []
-        prev_input = input
+        hidden_layers = []
+        output_layer = None
+        count = 0
+        prev_input = inputs
+
         for i in np.stack((self.weights, self.biases), axis=1):
-            weight, bias = i[0], i[1]
-            prev_input = prev_input.T @ weight + bias
-            layer_results.append(prev_input)
-        return layer_results if not applyActivations else \
-               [self.hidden_layer_activation(i) for i in layer_results[:-1]] + [Softmax.fn(layer_results[-1] - max(layer_results[-1]))]
+            count += 1
+            hidden_layer = prev_input @ i[0] + i[1]
+            prev_input = hidden_layer
+            if count == len(self.weights):
+                output_layer = hidden_layers[-1] @ self.weights[-1] + self.biases[-1]
+                output_layer = Softmax.fn(output_layer)
+                break
+            hidden_layer = self.hidden_layer_activation.fn(hidden_layer)
+            hidden_layers.append(hidden_layer) 
+
+        return hidden_layers, output_layer
 
 
     def minibatchSGD(self, train_data, train_target):
@@ -93,70 +104,67 @@ class NeuralNetwork:
         """
         for epoch in range(self.epochs):
             permutation = self.generator.permutation(train_data.shape[0])
-            for i in range(0, train_data.shape[0], self.batch_size):
-                weight_loss_derivative = np.array([np.zeros(weight.shape) for weight in self.weights], dtype=object)
-                biases_loss_derivative = np.array([np.zeros(bias.shape) for bias in self.biases], dtype=object)
-                for j in range(i, i + self.batch_size):
-                    train_j = train_data[permutation[j]]
-                    train_target_j = train_target[permutation[j]]
-                    wld, bld = self.backdrop(
-                        train_j,
-                        train_target_j,
-                        weight_loss_derivative,
-                        biases_loss_derivative
-                    )
-                    weight_loss_derivative += wld
-                    biases_loss_derivative += bld
+            for i in range(0, len(permutation), self.batch_size):
+                batch = permutation[i : i + self.batch_size]
+                train_batch = train_data[batch]
 
-                self.updateWeightsAndBiases(weight_loss_derivative, biases_loss_derivative)
+                hidden_layers, output_layer = self.forwardpropagation(train_batch)
+
+                output_layer_grad, hidden_layer_gradients = self.backpropagation(
+                    output_layer=output_layer,
+                    target_batch=train_target[batch],
+                    hidden_layers=hidden_layers
+                )
+
+                self.updateWeightsAndBiases(
+                    hidden_layers=hidden_layers,
+                    hidden_layer_gradients=hidden_layer_gradients,
+                    output_layer_grad=output_layer_grad,
+                    train_batch=train_data[batch]
+                )
 
             train_accuracy = self.getAccuracy(train_data, train_target)
             print(f"epoch number {epoch} finished. Training accuracy = {(100 * train_accuracy):.2f}%")
 
 
-    def backdrop(self, train, target, weight_loss_derivative, biases_loss_derivative):
+    def backpropagation(self, output_layer, target_batch, hidden_layers):
         """
         """
-        layer_res = self.forward(train)
-        layer_res_activation = np.array([self.hidden_layer_activation.fn(i) for i in layer_res[:-1]] \
-                             + [Softmax.fn(layer_res[-1] - np.max(layer_res[-1]))], dtype=object)
-
-        delta = layer_res_activation[-1] - self.getVectorizedResult(target)
-        biases_loss_derivative[-1] = delta
-        weight_loss_derivative[-1] = np.dot(delta, layer_res_activation[-1].T)
-        rest_layer_res_activation = np.array(layer_res[:-1])
-        rest_layer_res_activation_derivative = self.hidden_layer_activation.derivative(rest_layer_res_activation)
-
-        for i in range(2, self.hidden_layers_len + 2):
-            delta = np.dot(self.weights[-i+1], delta) * rest_layer_res_activation_derivative[-i+1]
-            biases_loss_derivative[-i] = delta
-            weight_loss_derivative[-i] = np.dot(delta, rest_layer_res_activation[-i+1].T)
-
-        return weight_loss_derivative, biases_loss_derivative
+        hidden_layer_gradients = []
+        output_layer_grad = output_layer - self.getVectorizedResultForABatch(target_batch)
+        grad = output_layer_grad
+        for j in range(len(hidden_layers) - 1, -1, -1):
+            grad = grad @ self.weights[j+1].T * self.hidden_layer_activation.derivative(hidden_layers[j])
+            hidden_layer_gradients.append(grad)
+        return output_layer_grad, hidden_layer_gradients
             
 
-
-    def updateWeightsAndBiases(self, weight_loss_derivative, biases_loss_derivative):
+    def updateWeightsAndBiases(
+        self,
+        hidden_layers,
+        hidden_layer_gradients,
+        output_layer_grad,
+        train_batch):
         """
         update weights and biases after every processing self.batch_size minibatch examples.
         """
-        self.weights -= self.learning_rate * (weight_loss_derivative / self.batch_size)
-        self.biases -= self.learning_rate * (biases_loss_derivative / self.batch_size)
+        b_grad = hidden_layer_gradients + [output_layer_grad]
+        w_grad = [train_batch] + hidden_layers
+        for k in range(len(self.weights) - 1, -1, -1):
+            self.biases[k] -= self.learning_rate * np.mean(b_grad[k], axis=0)
+            self.weights[k] -= self.learning_rate * (w_grad[k].T @ b_grad[k] / self.batch_size)
 
-    def getVectorizedResult(self, j):
+    def getVectorizedResultForABatch(self, j):
         """
         Given a target class, return a self.classes dimentional unit vector
         with 1 in the jth index (One-Hot Encoding of j)
         """
-        res = np.zeros((self.classes))
-        res[j] = 1
-        return res
+        return np.eye(self.classes)[j]
 
     def getAccuracy(self, X, y):
         """
         """
-        prediction = np.argmax(np.array([np.array(self.forward(x)[-1]) for x in X]), axis=1)
-        print("PREDICTION", prediction)
+        prediction = np.argmax(np.array([np.array(self.forwardpropagation(x)[-1]) for x in X]), axis=1)
         accuracy = sum(1 if a == b else 0 for a,b in np.stack((prediction, y), axis=1))
         return accuracy / len(prediction)
 
