@@ -25,6 +25,13 @@ if __name__ == "__main__":
     log.info(f"validation target shape = {validation_target.shape}")
     nn = NeuralNetwork(classes=10, seed = 42, epochs=20)
     nn.fit(train_data, train_target)
+
+    #save trained model
+    nn.save()
+
+    #load trained model
+    nn.load()
+
     log.info(f"validation dataset score = {(100 * accuracy_score(validation_target, nn.predict(validation_data))):.2f}%")
     log.info(f"test dataset score = {(100 * accuracy_score(test_target.data, nn.predict(test.data))):.2f}%")
 
