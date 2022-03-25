@@ -33,6 +33,19 @@ class NeuralNetwork:
             1) relu : ReLU(x) = max(0, x)
             2) softmax : softmax(x) = (e^x) / sum (j in x (e^j))
             3) sigmoid : sigmoid(x) = 1 / (1 + e^(-x))
+
+        :params seed:
+            Random seed to be used to extract train data for training the neural network.
+
+        :params learning rate:
+            Learning rate(alpha) hyperparameter to be used to update the weights and biases
+            in the network.
+
+        :params epochs:
+            Number of stochastic gradient descent epochs.
+
+        :params batch_size:
+            Size of minibatch to be used to compute derivatives to update the weights and biases.
         """
         self.classes = classes
         self.hidden_layer_sizes = hidden_layer_sizes
@@ -49,7 +62,8 @@ class NeuralNetwork:
 
     def fit(self, X, y):
         """
-        Train the neural network using minibatch SGD algorithm. 
+        Train the neural network using train data, X \in |R^(N * K), and targets y \in |R^(N),
+        where K is the number of features in the input data.
         """
         if (any(param <= 0 for param in self.hidden_layer_sizes)):
             raise ValueError("Hidden layer must be an integer greater than 0")
@@ -58,6 +72,11 @@ class NeuralNetwork:
 
 
     def initWeightsAndBiases(self, X):
+        """
+        Initialize the weights and biases based on the number of neurons in the network.
+        Number of neurons in the network = 2 + number of hidden layers (input neurons n_in \in |R^(K) + output neurons n_out \in |R^(d)),
+        where K is the number of features in the input data, and d is the number of target classes.
+        """
         all_layer_sizes = [X.shape[1]] + self.hidden_layer_sizes + [self.classes]
         log.info(f"all layer sizes = {all_layer_sizes}")
         log.info(f"Training the model. Number of features = {X.shape[1]}")
@@ -78,7 +97,8 @@ class NeuralNetwork:
     def forwardpropagation(self, inputs):
         """
         Forward Propagation; given the input to the first layer,
-        return all layer results (activations applied).
+        return the hidden layers with activations applied, and also the
+        output layer with Softmax activation applied.
         """
         hidden_layers = []
         output_layer = None
@@ -101,6 +121,7 @@ class NeuralNetwork:
 
     def minibatchSGD(self, train_data, train_target):
         """
+        Train the network using minibatch stochastic gradient descent.
         """
         for epoch in range(self.epochs):
             permutation = self.generator.permutation(train_data.shape[0])
@@ -129,6 +150,9 @@ class NeuralNetwork:
 
     def backpropagation(self, output_layer, target_batch, hidden_layers):
         """
+        After processing a mini-batch, return the total cost and the gradients of all the
+        layers, which will then be used to update the weights and biases after processing a
+        minibatch training examples.
         """
         hidden_layer_gradients = []
         cost = output_layer - self.getVectorizedResultForABatch(target_batch)
@@ -146,7 +170,7 @@ class NeuralNetwork:
         cost,
         train_batch):
         """
-        update weights and biases after every processing self.batch_size minibatch examples.
+        update weights and biases after processing a mini-batch (both the forward and the backward propagations).
         """
         b_grad = hidden_layer_gradients + [cost]
         w_grad = [train_batch] + hidden_layers
@@ -154,15 +178,17 @@ class NeuralNetwork:
             self.biases[k] -= self.learning_rate * np.mean(b_grad[k], axis=0)
             self.weights[k] -= self.learning_rate * (w_grad[k].T @ b_grad[k] / self.batch_size)
 
-    def getVectorizedResultForABatch(self, j):
+    def getVectorizedResultForABatch(self, minibatch):
         """
-        Given a target class, return a self.classes dimentional unit vector
-        with 1 in the jth index (One-Hot Encoding of j)
+        Given a target class, return a (batch_size * self.classes) dimentional unit vectors
+        with 1 in the jth index of each unit vector of the mini-batch (One-Hot Encoding of j)
         """
-        return np.eye(self.classes)[j]
+        return np.eye(self.classes)[minibatch]
 
     def getAccuracy(self, X, y):
         """
+        Return the accuracy of the learned weights and biases, given an input X \in |R^(N * K) and target
+        y \in |R^(N), where K is the number of features of the input data. 
         """
         prediction = np.argmax(np.array([np.array(self.forwardpropagation(x)[-1]) for x in X]), axis=1)
         accuracy = sum(1 if a == b else 0 for a,b in np.stack((prediction, y), axis=1))
