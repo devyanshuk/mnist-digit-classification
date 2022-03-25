@@ -1,5 +1,6 @@
 #global
 import numpy as np
+import jsonpickle
 
 #local
 from .Activations.relu import ReLU
@@ -218,4 +219,22 @@ class NeuralNetwork:
         prediction = self.predict(X)
         accuracy = sum(1 if a == b else 0 for a,b in np.stack((prediction, y), axis=1))
         return accuracy / len(prediction)
+
+    def save(self):
+        """
+        Save all learned weights and biases to be used later on without having to train the
+        network again.
+        """
+        self.validate_trained()
+        out_file = open("train.json", "w")
+        out_file.write(jsonpickle.encode(self))
+
+    def load(self):
+        """
+        Load all learned weights and biases that was trained before.
+        """
+        in_file = open("train.json", "r")
+        self = jsonpickle.decode(in_file.read())
+    
+        
 
