@@ -110,7 +110,7 @@ class NeuralNetwork:
 
                 hidden_layers, output_layer = self.forwardpropagation(train_batch)
 
-                output_layer_grad, hidden_layer_gradients = self.backpropagation(
+                cost, hidden_layer_gradients = self.backpropagation(
                     output_layer=output_layer,
                     target_batch=train_target[batch],
                     hidden_layers=hidden_layers
@@ -119,7 +119,7 @@ class NeuralNetwork:
                 self.updateWeightsAndBiases(
                     hidden_layers=hidden_layers,
                     hidden_layer_gradients=hidden_layer_gradients,
-                    output_layer_grad=output_layer_grad,
+                    cost=cost,
                     train_batch=train_data[batch]
                 )
 
@@ -131,24 +131,24 @@ class NeuralNetwork:
         """
         """
         hidden_layer_gradients = []
-        output_layer_grad = output_layer - self.getVectorizedResultForABatch(target_batch)
-        grad = output_layer_grad
+        cost = output_layer - self.getVectorizedResultForABatch(target_batch)
+        grad = cost
         for j in range(len(hidden_layers) - 1, -1, -1):
             grad = grad @ self.weights[j+1].T * self.hidden_layer_activation.derivative(hidden_layers[j])
             hidden_layer_gradients.append(grad)
-        return output_layer_grad, hidden_layer_gradients
+        return cost, hidden_layer_gradients
             
 
     def updateWeightsAndBiases(
         self,
         hidden_layers,
         hidden_layer_gradients,
-        output_layer_grad,
+        cost,
         train_batch):
         """
         update weights and biases after every processing self.batch_size minibatch examples.
         """
-        b_grad = hidden_layer_gradients + [output_layer_grad]
+        b_grad = hidden_layer_gradients + [cost]
         w_grad = [train_batch] + hidden_layers
         for k in range(len(self.weights) - 1, -1, -1):
             self.biases[k] -= self.learning_rate * np.mean(b_grad[k], axis=0)
