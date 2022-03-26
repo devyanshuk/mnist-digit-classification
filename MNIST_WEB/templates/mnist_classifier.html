@@ -1,0 +1,15 @@
+{% include 'base.html' %}
+
+{% block content %}
+
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">   
+
+    <canvas height="400" width="400" id="draw"></canvas>
+    <br>
+    <div class="buttons">
+        <button id="reset">Reset</button>
+        <button id="erase">Eraser</button>
+    </div>
+
+{% endblock %}
