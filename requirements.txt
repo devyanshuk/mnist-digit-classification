@@ -1,3 +1,5 @@
 numpy
 jsonpickle
 scikit-learn
+django
+python-decouple

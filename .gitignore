@@ -5,3 +5,6 @@ data/
 __pycache__
 *.log
 *.json
+.env
+*.jpg
+*.png

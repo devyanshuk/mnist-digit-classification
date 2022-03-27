@@ -1,0 +1,43 @@
+body {
+    background-color: gray;
+    }
+
+#area {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    border: 3px solid black;
+    background-color: #ffff;
+}
+
+.buttons {
+    text-align: center;
+}
+
+#pred, #reset, #erase {
+    background-color: black;
+    border: 2px solid black;
+    color: white ;
+    padding: 12px 28px;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 15px;
+    box-shadow: 0 9px #35553E;
+}
+
+#reset:hover, #erase:hover, #pred:hover {
+	background-color: #4b835a;
+}
+
+#reset:active, #erase:active, #pred:active {
+    background-color: #4b835a;
+	transform: translateY(4px);
+}
+
+#erase.active {
+    background: #4b835a;
+	transform: translateY(4px);
+}
