@@ -3,13 +3,21 @@
 {% block content %}
 
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">   
+<link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 
-    <canvas height="400" width="400" id="draw"></canvas>
+    <br>
+    <br>
+    <canvas id="area" height="400" width="400"></canvas>
     <br>
     <div class="buttons">
         <button id="reset">Reset</button>
+        &nbsp; &nbsp;
         <button id="erase">Eraser</button>
+        &nbsp; &nbsp;
+        <button id="pred">Predict</button>
     </div>
+
+{% load static %}
+<script src="{% static 'js/classifier.js' %}"> </script>
 
 {% endblock %}
