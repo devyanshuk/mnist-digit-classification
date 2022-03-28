@@ -18,8 +18,9 @@ $("#reset").click(function() {
 });
 
 $("#area").on("mousedown touchstart" ,function(e) {
-    curX = e.clientX - area.offsetLeft;
-    curY = e.clientY - area.offsetTop;
+    ev = e.touches ? e.touches[0] : e;
+    curX = ev.clientX - area.offsetLeft;
+    curY = ev.clientY - area.offsetTop;
     hold = true;
         
     prevX = curX;
@@ -30,8 +31,9 @@ $("#area").on("mousedown touchstart" ,function(e) {
 
 $("#area").on("mousemove touchmove", function(e){
     if(hold){
-        curX = e.clientX - area.offsetLeft;
-        curY = e.clientY - area.offsetTop;
+        ev = e.touches ? e.touches[0] : e;
+        curX = ev.clientX - area.offsetLeft;
+        curY = ev.clientY - area.offsetTop;
         draw();
     }
 });
