@@ -17,7 +17,7 @@ $("#reset").click(function() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 });
 
-$("#area").mousedown(function(e) {
+$("#area").on("mousedown touchstart" ,function(e) {
     curX = e.clientX - area.offsetLeft;
     curY = e.clientY - area.offsetTop;
     hold = true;
@@ -28,7 +28,7 @@ $("#area").mousedown(function(e) {
     context.moveTo(prevX, prevY);
 });
 
-$("#area").mousemove(function(e) {
+$("#area").on("mousemove touchmove", function(e){
     if(hold){
         curX = e.clientX - area.offsetLeft;
         curY = e.clientY - area.offsetTop;
@@ -36,7 +36,7 @@ $("#area").mousemove(function(e) {
     }
 });
 
-$("#area").on("mouseout mouseup", function (e){
+$("#area").on("mouseout mouseup touchend", function (e){
     hold = false;
 });
 
