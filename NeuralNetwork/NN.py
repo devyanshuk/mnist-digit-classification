@@ -70,6 +70,12 @@ class NeuralNetwork:
         self.initWeightsAndBiases(X)
         self.minibatchSGD(X, y)
 
+    def fit_more(self, X, y):
+        """
+        Fit some more data to the trained model.
+        """
+        self.minibatchSGD(X, y)
+
     def validate_trained(self):
         if self.weights == [] or self.biases == []:
             raise ValueError("Train the model using fit() method before having the network predict it.")
