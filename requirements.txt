@@ -5,3 +5,4 @@ django
 python-decouple
 gunicorn
 whitenoise==6.0.0
+pillow
