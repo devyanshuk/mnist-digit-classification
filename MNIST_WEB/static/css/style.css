@@ -41,3 +41,16 @@ body {
     background: #4b835a;
 	transform: translateY(4px);
 }
+
+#results {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    margin-bottom: 0
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
