@@ -28,7 +28,6 @@ def handle_image(request):
     alpha = np.array([a[-1] for a in list(img.getdata())]) / np.float32(256)
     softmax_prediction = nn.get_output_layer_single(alpha)
     prediction = np.argmax(softmax_prediction).item()
-    print([round(float(x), 5) for x in list(softmax_prediction)])
     return HttpResponse(json.dumps(
         {
             "softmax" : [format(x, '.5f') for x in list(softmax_prediction)],
