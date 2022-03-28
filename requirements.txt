@@ -3,3 +3,5 @@ jsonpickle
 scikit-learn
 django
 python-decouple
+gunicorn
+whitenoise==6.0.0
