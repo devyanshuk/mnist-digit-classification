@@ -1,6 +1,6 @@
 var canvas = $("#area")[0];
 var context = canvas.getContext("2d");
-context.lineWidth = 25;
+context.lineWidth = 40;
 context.lineCap = context.lineJoin = "round";
 var hold = false;
 var prevX, prevY, curX, curY;
@@ -41,7 +41,24 @@ $("#area").on("mouseout mouseup", function (e){
 });
 
 $("#pred").click(function() {
-    $.post("image/", { image: canvas.toDataURL("image/jpg", 1.0) } );
+    $.post("image/", { image: canvas.toDataURL("image/jpg", 1.0) },
+    function(data) {
+        var response = jQuery.parseJSON(data);
+        var softmax_predictions = response.softmax;
+        var prediction = response.prediction;
+        var res = "<tr>";
+        for (var j=0; j < 10; j++) {
+            res += "<td><b>" + j + "</b></td>";
+        }
+        res += "</tr><tr>";
+        for (var i in softmax_predictions) {
+            var color = prediction == i ? 0 : 255;
+            res += "<td style='background-color: rgb(" + color + ",255," + color + ")'>" + softmax_predictions[i] + "</td>";
+        }
+        res += "</tr>";
+        $("#results").html(res);
+
+    });
 });
     
 function draw(){
