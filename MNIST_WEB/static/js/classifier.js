@@ -18,7 +18,7 @@ $("#reset").click(function() {
 });
 
 $("#area").on("mousedown touchstart" ,function(e) {
-    ev = e.touches ? e.touches[0] : e;
+    var ev = e.touches ? e.touches[0] : e;
     curX = ev.clientX - area.offsetLeft;
     curY = ev.clientY - area.offsetTop;
     hold = true;
@@ -31,7 +31,7 @@ $("#area").on("mousedown touchstart" ,function(e) {
 
 $("#area").on("mousemove touchmove", function(e){
     if(hold){
-        ev = e.touches ? e.touches[0] : e;
+        var ev = e.touches ? e.touches[0] : e;
         curX = ev.clientX - area.offsetLeft;
         curY = ev.clientY - area.offsetTop;
         draw();
@@ -77,3 +77,20 @@ function draw(){
     context.strokeStyle = beingErased ? "#ffffff" : "#000000";
     context.stroke();
 }
+
+
+document.body.addEventListener("touchstart", function (e) {
+    if (e.target == canvas) {
+      e.preventDefault();
+    }
+  }, false);
+  document.body.addEventListener("touchend", function (e) {
+    if (e.target == canvas) {
+      e.preventDefault();
+    }
+  }, false);
+  document.body.addEventListener("touchmove", function (e) {
+    if (e.target == canvas) {
+      e.preventDefault();
+    }
+  }, false);
