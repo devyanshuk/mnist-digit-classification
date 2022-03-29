@@ -2,6 +2,7 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from PIL import Image
 
 #local
 from helpers import save, load
@@ -26,14 +27,20 @@ if __name__ == "__main__":
     log.info(f"train target shape = {train_target.shape}")
     log.info(f"validation target shape = {validation_target.shape}")
     #nn = NeuralNetwork(classes=10, seed = 42, epochs=20)
-    #nn.fit(train_data, train_target)
+    #nn.fit(train.data, t_target.data)
+    print("FITTING TEST DATA")
+    #nn.fit_more(test.data, test_target.data)
+    # a = train_data[0].reshape(28, 28) * np.float32(256)
+    # print(a)
+    # im = Image.fromarray(a).convert('L')
+    # im.save("image.png")
 
     #save trained model
     #save(nn)
 
     #load trained model
-    nn = load()
+    #nn = load()
 
-    log.info(f"validation dataset score = {(100 * accuracy_score(validation_target, nn.predict(validation_data))):.2f}%")
-    log.info(f"test dataset score = {(100 * accuracy_score(test_target.data, nn.predict(test.data))):.2f}%")
+    # log.info(f"validation dataset score = {(100 * accuracy_score(validation_target, nn.predict(validation_data))):.2f}%")
+    # log.info(f"test dataset score = {(100 * accuracy_score(test_target.data, nn.predict(test.data))):.2f}%")
 

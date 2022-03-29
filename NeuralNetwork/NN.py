@@ -76,6 +76,14 @@ class NeuralNetwork:
         """
         self.minibatchSGD(X, y)
 
+    def fit_single(self, x, y):
+        """
+        fits a single data and target to the model.
+        """
+        temp = self.batch_size
+        self.minibatchSGD(x, y)
+        self.batch_size = temp
+
     def validate_trained(self):
         if self.weights == [] or self.biases == []:
             raise ValueError("Train the model using fit() method before having the network predict it.")
@@ -138,6 +146,7 @@ class NeuralNetwork:
 
         for i in np.stack((self.weights, self.biases), axis=1):
             count += 1
+            print("PREV INPUT SHAPE", prev_input.shape)
             hidden_layer = prev_input @ i[0] + i[1]
             prev_input = hidden_layer
             if count == len(self.weights):
@@ -176,7 +185,7 @@ class NeuralNetwork:
                 )
 
             train_accuracy = self.getAccuracy(train_data, train_target)
-            log.info(f"epoch number {epoch} finished. Training accuracy = {(100 * train_accuracy):.2f}%")
+            print(f"epoch number {epoch} finished. Training accuracy = {(100 * train_accuracy):.2f}%")
 
 
     def backpropagation(self, output_layer, target_batch, hidden_layers):

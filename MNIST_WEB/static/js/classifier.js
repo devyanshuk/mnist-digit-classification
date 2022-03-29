@@ -17,6 +17,10 @@ $("#reset").click(function() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 });
 
+$("#save").click(function() {
+    $.post("save/", { });
+});
+
 $("#area").on("mousedown touchstart" ,function(e) {
     var ev = e.touches ? e.touches[0] : e;
     curX = ev.clientX - area.offsetLeft;
@@ -49,7 +53,8 @@ $("#pred").click(function() {
         type: 'POST',
         dataType: 'json',
         data: { 
-            'data_url' : dataurl
+            'data_url' : dataurl,
+            'field'    : document.getElementById("inp").value
         },
         success: function (response) {
             endresult = JSON.parse(JSON.stringify(response))
